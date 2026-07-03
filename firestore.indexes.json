@@ -1,0 +1,14 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "tasks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "dueDateTime", "order": "ASCENDING" },
+        { "fieldPath": "isCompleted", "order": "ASCENDING" },
+        { "fieldPath": "notified", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

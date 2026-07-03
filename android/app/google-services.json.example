@@ -1,0 +1,39 @@
+{
+  "_comment": "EXAMPLE FILE — download your real google-services.json from the Firebase console (Project settings > Your apps > Android app) and place it at android/app/google-services.json. That file is gitignored so your real keys never get committed.",
+  "project_info": {
+    "project_number": "000000000000",
+    "project_id": "your-project-id",
+    "storage_bucket": "your-project-id.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+        "android_client_info": {
+          "package_name": "com.personal.todo_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "000000000000-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.personal.todo_app",
+            "certificate_hash": "0000000000000000000000000000000000000000"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "YOUR_ANDROID_API_KEY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
