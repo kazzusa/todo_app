@@ -1,6 +1,4 @@
-Direct answer — I prepared a concise, evidence-backed project summary and a ready-to-paste README.md update for kazzusa/todo_app. Below is a short repository overview (one you can keep in the README top) plus the full suggested README contents you can add or replace the current README with.
-
-## What this is
+## ToDo
 A lightweight Flutter-based personal task manager that accepts natural-language task input, syncs tasks with Google Calendar, and sends scheduled push notifications via Firebase Cloud Messaging. It's designed for individual users who want a simple inbox/today/upcoming task workflow with optional calendar integration and home-screen widget sync.
 
 ### Stack
