@@ -266,7 +266,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
-            body: _buildContent(provider),
+            body: _buildContent(provider, visibleTasks),
             floatingActionButton: _selectionMode
                 ? null
                 : FloatingActionButton(
@@ -279,41 +279,28 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildContent(TaskProvider provider) {
-    switch (_selectedTab) {
-      case 'inbox':
-        return _GroupedTaskList(
-          tasks: provider.inboxTasks,
-          categoryOrder: provider.customCategories,
-          selectedIds: _selectedIds,
-          onLongPress: _startSelection,
-          onTapSelect: _toggleSelected,
-        );
-      case 'today':
-        return _TaskList(
-          tasks: provider.todayTasks,
-          emptyLabel: 'Nothing due today',
-          selectedIds: _selectedIds,
-          onLongPress: _startSelection,
-          onTapSelect: _toggleSelected,
-        );
-      case 'done':
-        return _TaskList(
-          tasks: provider.completedTasks,
-          emptyLabel: 'No completed tasks',
-          selectedIds: _selectedIds,
-          onLongPress: _startSelection,
-          onTapSelect: _toggleSelected,
-        );
-      default:
-        return _TaskList(
-          tasks: provider.tasksForCategory(_selectedTab),
-          emptyLabel: 'No tasks in "$_selectedTab"\nType "/$_selectedTab" to add one',
-          selectedIds: _selectedIds,
-          onLongPress: _startSelection,
-          onTapSelect: _toggleSelected,
-        );
+  Widget _buildContent(TaskProvider provider, List<Task> visibleTasks) {
+    if (_selectedTab == 'inbox') {
+      return _GroupedTaskList(
+        tasks: visibleTasks,
+        categoryOrder: provider.customCategories,
+        selectedIds: _selectedIds,
+        onLongPress: _startSelection,
+        onTapSelect: _toggleSelected,
+      );
     }
+    final emptyLabel = switch (_selectedTab) {
+      'today' => 'Nothing due today',
+      'done' => 'No completed tasks',
+      _ => 'No tasks in "$_selectedTab"\nType "/$_selectedTab" to add one',
+    };
+    return _TaskList(
+      tasks: visibleTasks,
+      emptyLabel: emptyLabel,
+      selectedIds: _selectedIds,
+      onLongPress: _startSelection,
+      onTapSelect: _toggleSelected,
+    );
   }
 }
 

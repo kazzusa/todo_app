@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
+import '../models/task.dart';
 import '../providers/task_provider.dart';
 import '../widgets/task_card.dart';
 import 'add_task_screen.dart';
@@ -24,6 +25,17 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return Consumer<TaskProvider>(
       builder: (context, provider, _) {
         final selectedTasks = provider.tasksForDate(_selected);
+
+        // Pre-group once per rebuild so eventLoader below is an O(1) lookup
+        // per day cell instead of an O(n log n) filter+sort per cell (table
+        // calendar calls eventLoader for every visible day, ~42 times/month).
+        final tasksByDay = <DateTime, List<Task>>{};
+        for (final t in provider.tasks) {
+          if (t.dueDateTime == null) continue;
+          final d = DateTime(
+              t.dueDateTime!.year, t.dueDateTime!.month, t.dueDateTime!.day);
+          (tasksByDay[d] ??= []).add(t);
+        }
 
         return Scaffold(
           appBar: AppBar(
@@ -103,7 +115,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 rowHeight: 48,
                 eventLoader: (day) {
                   final d = DateTime(day.year, day.month, day.day);
-                  return provider.tasksForDate(d);
+                  return tasksByDay[d] ?? const [];
                 },
               ),
               Divider(height: 1, color: theme.dividerColor),

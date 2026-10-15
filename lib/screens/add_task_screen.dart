@@ -36,7 +36,11 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       _controller = TextEditingController(text: task.title);
       _title = task.title;
       _dueDate = task.dueDateTime != null
-          ? DateTime(task.dueDateTime!.year, task.dueDateTime!.month, task.dueDateTime!.day)
+          ? DateTime(
+              task.dueDateTime!.year,
+              task.dueDateTime!.month,
+              task.dueDateTime!.day,
+            )
           : null;
       _dueTime = task.dueTimeOfDay;
       _recurrence = task.recurrence;
@@ -106,10 +110,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     final selected = await showModalBottomSheet<String?>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => _CategoryPicker(
-        categories: categories,
-        selected: _category,
-      ),
+      builder: (ctx) =>
+          _CategoryPicker(categories: categories, selected: _category),
     );
     if (selected != null) {
       setState(() {
@@ -128,8 +130,11 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     if (_dueDate != null) {
       if (_dueTime != null) {
         dueDateTime = DateTime(
-          _dueDate!.year, _dueDate!.month, _dueDate!.day,
-          _dueTime!.hour, _dueTime!.minute,
+          _dueDate!.year,
+          _dueDate!.month,
+          _dueDate!.day,
+          _dueTime!.hour,
+          _dueTime!.minute,
         );
         hasDueTime = true;
       } else {
@@ -139,28 +144,32 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
     final provider = context.read<TaskProvider>();
     if (widget.existingTask != null) {
-      await provider.updateTask(widget.existingTask!.copyWith(
-        title: title,
-        dueDateTime: dueDateTime,
-        hasDueTime: hasDueTime,
-        recurrence: _recurrence,
-        recurrenceWeekday: _recurrenceWeekday,
-        category: _category,
-        clearDueDateTime: dueDateTime == null,
-        clearRecurrenceWeekday: _recurrenceWeekday == null,
-        clearCategory: _category == null,
-      ));
+      await provider.updateTask(
+        widget.existingTask!.copyWith(
+          title: title,
+          dueDateTime: dueDateTime,
+          hasDueTime: hasDueTime,
+          recurrence: _recurrence,
+          recurrenceWeekday: _recurrenceWeekday,
+          category: _category,
+          clearDueDateTime: dueDateTime == null,
+          clearRecurrenceWeekday: _recurrenceWeekday == null,
+          clearCategory: _category == null,
+        ),
+      );
     } else {
-      await provider.addTask(Task(
-        id: '',
-        title: title,
-        dueDateTime: dueDateTime,
-        hasDueTime: hasDueTime,
-        recurrence: _recurrence,
-        recurrenceWeekday: _recurrenceWeekday,
-        category: _category,
-        createdAt: DateTime.now(),
-      ));
+      await provider.addTask(
+        Task(
+          id: '',
+          title: title,
+          dueDateTime: dueDateTime,
+          hasDueTime: hasDueTime,
+          recurrence: _recurrence,
+          recurrenceWeekday: _recurrenceWeekday,
+          category: _category,
+          createdAt: DateTime.now(),
+        ),
+      );
     }
 
     if (mounted) Navigator.of(context).pop();
@@ -186,133 +195,147 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         top: 16,
         left: 16,
         right: 16,
-        bottom: MediaQuery.of(context).viewInsets.bottom +
-            MediaQuery.of(context).viewPadding.bottom +
+        // `padding.bottom` (not `viewPadding.bottom`) so this doesn't add
+        // safe-area clearance on top of the keyboard when both are present —
+        // padding already shrinks to ~0 once the keyboard exceeds the system
+        // bar inset, avoiding an overflow that clips the buttons off-screen.
+        bottom:
+            MediaQuery.of(context).viewInsets.bottom +
+            MediaQuery.of(context).padding.bottom +
             24,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Handle bar
-          Center(
-            child: Container(
-              width: 36, height: 4,
-              decoration: BoxDecoration(
-                color: theme.dividerColor,
-                borderRadius: BorderRadius.circular(2),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle bar
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.dividerColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-          // Title
-          Text(
-            isEditing ? 'Edit Task' : 'New Task',
-            style: theme.textTheme.titleLarge,
-          ),
-          const SizedBox(height: 12),
-
-          // NLP input
-          TextField(
-            controller: _controller,
-            autofocus: !isEditing,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: InputDecoration(
-              hintText: 'e.g. "Submit report tomorrow at 5pm"',
-              suffixIcon: _controller.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear, size: 18),
-                      onPressed: () => _controller.clear(),
-                    )
-                  : null,
+            // Title
+            Text(
+              isEditing ? 'Edit Task' : 'New Task',
+              style: theme.textTheme.titleLarge,
             ),
-          ),
-
-          // Parse preview
-          if (_parsed != null && !isEditing && _controller.text.isNotEmpty)
-            _ParsePreview(parsed: _parsed!),
-
-          // Editable fields
-          if (_showFields) ...[
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _ChipButton(
-                    icon: Icons.calendar_today_outlined,
-                    label: _dueDate != null
-                        ? DateFormat('MMM d').format(_dueDate!)
-                        : 'Date',
-                    active: _dueDate != null,
-                    onTap: _pickDate,
-                    onClear: _dueDate != null
-                        ? () => setState(() { _dueDate = null; _dueTime = null; })
-                        : null,
+
+            // NLP input
+            TextField(
+              controller: _controller,
+              autofocus: !isEditing,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(
+                hintText: 'e.g. "Submit report tomorrow at 5pm"',
+                suffixIcon: _controller.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 18),
+                        onPressed: () => _controller.clear(),
+                      )
+                    : null,
+              ),
+            ),
+
+            // Parse preview
+            if (_parsed != null && !isEditing && _controller.text.isNotEmpty)
+              _ParsePreview(parsed: _parsed!),
+
+            // Editable fields
+            if (_showFields) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _ChipButton(
+                      icon: Icons.calendar_today_outlined,
+                      label: _dueDate != null
+                          ? DateFormat('MMM d').format(_dueDate!)
+                          : 'Date',
+                      active: _dueDate != null,
+                      onTap: _pickDate,
+                      onClear: _dueDate != null
+                          ? () => setState(() {
+                              _dueDate = null;
+                              _dueTime = null;
+                            })
+                          : null,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _ChipButton(
-                    icon: Icons.schedule,
-                    label: _dueTime != null
-                        ? _dueTime!.format(context)
-                        : 'Time',
-                    active: _dueTime != null,
-                    enabled: _dueDate != null,
-                    onTap: _dueDate != null ? _pickTime : null,
-                    onClear: _dueTime != null
-                        ? () => setState(() => _dueTime = null)
-                        : null,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _ChipButton(
+                      icon: Icons.schedule,
+                      label: _dueTime != null
+                          ? _dueTime!.format(context)
+                          : 'Time',
+                      active: _dueTime != null,
+                      enabled: _dueDate != null,
+                      onTap: _dueDate != null ? _pickTime : null,
+                      onClear: _dueTime != null
+                          ? () => setState(() => _dueTime = null)
+                          : null,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _ChipButton(
-                    icon: Icons.folder_outlined,
-                    label: _category != null
-                        ? (_category![0].toUpperCase() + _category!.substring(1))
-                        : 'Category',
-                    active: _category != null,
-                    onTap: _pickCategory,
-                    onClear: _category != null
-                        ? () => setState(() {
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _ChipButton(
+                      icon: Icons.folder_outlined,
+                      label: _category != null
+                          ? (_category![0].toUpperCase() +
+                                _category!.substring(1))
+                          : 'Category',
+                      active: _category != null,
+                      onTap: _pickCategory,
+                      onClear: _category != null
+                          ? () => setState(() {
                               _category = null;
                               _categoryOverridden = true;
                             })
-                        : null,
+                          : null,
+                    ),
                   ),
+                ],
+              ),
+            ],
+
+            const SizedBox(height: 16),
+
+            // Action buttons
+            Row(
+              children: [
+                if (isEditing) ...[
+                  IconButton(
+                    icon: Icon(
+                      Icons.delete_outline,
+                      color: theme.colorScheme.error,
+                    ),
+                    onPressed: _delete,
+                  ),
+                  const Spacer(),
+                ],
+                if (!isEditing) const Spacer(),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                const SizedBox(width: 8),
+                FilledButton(
+                  onPressed: _title.trim().isNotEmpty ? _save : null,
+                  child: Text(isEditing ? 'Save' : 'Add'),
                 ),
               ],
             ),
           ],
-
-          const SizedBox(height: 16),
-
-          // Action buttons
-          Row(
-            children: [
-              if (isEditing) ...[
-                IconButton(
-                  icon: Icon(Icons.delete_outline,
-                      color: theme.colorScheme.error),
-                  onPressed: _delete,
-                ),
-                const Spacer(),
-              ],
-              if (!isEditing) const Spacer(),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
-              ),
-              const SizedBox(width: 8),
-              FilledButton(
-                onPressed: _title.trim().isNotEmpty ? _save : null,
-                child: Text(isEditing ? 'Save' : 'Add'),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -366,18 +389,21 @@ class _ParsePreview extends StatelessWidget {
 
   String _recurrenceLabel(RecurrenceType r, int? weekday) {
     switch (r) {
-      case RecurrenceType.daily: return 'Daily';
-      case RecurrenceType.weekly: return 'Weekly';
-      case RecurrenceType.monthly: return 'Monthly';
+      case RecurrenceType.daily:
+        return 'Daily';
+      case RecurrenceType.weekly:
+        return 'Weekly';
+      case RecurrenceType.monthly:
+        return 'Monthly';
       case RecurrenceType.weekday:
         const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         final idx = (weekday ?? 1) - 1;
         return 'Every ${days[idx]}';
-      case RecurrenceType.none: return '';
+      case RecurrenceType.none:
+        return '';
     }
   }
 }
-
 
 class _ChipButton extends StatelessWidget {
   final IconData icon;
@@ -411,9 +437,7 @@ class _ChipButton extends StatelessWidget {
               ? accent.withAlpha(30)
               : theme.colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(8),
-          border: active
-              ? Border.all(color: accent.withAlpha(80))
-              : null,
+          border: active ? Border.all(color: accent.withAlpha(80)) : null,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -441,15 +465,11 @@ class _ChipButton extends StatelessWidget {
   }
 }
 
-
 class _CategoryPicker extends StatelessWidget {
   final List<String> categories;
   final String? selected;
 
-  const _CategoryPicker({
-    required this.categories,
-    required this.selected,
-  });
+  const _CategoryPicker({required this.categories, required this.selected});
 
   @override
   Widget build(BuildContext context) {
@@ -466,7 +486,8 @@ class _CategoryPicker extends StatelessWidget {
         children: [
           Center(
             child: Container(
-              width: 36, height: 4,
+              width: 36,
+              height: 4,
               decoration: BoxDecoration(
                 color: theme.dividerColor,
                 borderRadius: BorderRadius.circular(2),
@@ -491,11 +512,13 @@ class _CategoryPicker extends StatelessWidget {
               ),
             )
           else
-            ...categories.map((cat) => _CategoryTile(
-              label: cat[0].toUpperCase() + cat.substring(1),
-              isSelected: selected == cat,
-              onTap: () => Navigator.of(context).pop(cat),
-            )),
+            ...categories.map(
+              (cat) => _CategoryTile(
+                label: cat[0].toUpperCase() + cat.substring(1),
+                isSelected: selected == cat,
+                onTap: () => Navigator.of(context).pop(cat),
+              ),
+            ),
         ],
       ),
     );
@@ -521,7 +544,9 @@ class _CategoryTile extends StatelessWidget {
       leading: Icon(
         Icons.folder_outlined,
         size: 18,
-        color: isSelected ? theme.colorScheme.primary : theme.textTheme.bodySmall!.color,
+        color: isSelected
+            ? theme.colorScheme.primary
+            : theme.textTheme.bodySmall!.color,
       ),
       title: Text(
         label,
